@@ -3,7 +3,7 @@ A simple demo for pushing RTMP stream, using OpenCV + FFmpeg + Qt.
 The video/audio source can be from a webcam or RTSP stream.  
   
 # Environment Configuration
-***Visual Studio 2019**  
+***Visual Studio 2019***  
 ***Qt 6.7.0***  
   
 ***Visual Studio 2019 Qt Plug-in***  
@@ -12,11 +12,11 @@ The video/audio source can be from a webcam or RTSP stream.
 
 2. Setting Qt version in Visual Studio after installation:  
 `Extensions -> Qt VS Tools -> Qt Versions`  
-![Imgur Image](https://imgur.com/a/rJshcXF.jpg)  
+![Imgur Image](https://imgur.com/RyGjvsj.png)  
   
 ***OpenCV 4.7.0***  
 Use CMake to configure and generate the build files.  
-Note: Enable WITH_FFMPEG flag.  
+Note: Enable `WITH_FFMPEG` flag.  
 [https://github.com/opencv/opencv/archive/4.7.0.zip](https://github.com/opencv/opencv/archive/4.7.0.zip)  
   
 ***FFmpeg 2023-09-30 win64-gpl-shared***  
