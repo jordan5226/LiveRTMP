@@ -10,6 +10,34 @@ using namespace std;
 // LiveRTMP.exe -camera -output rtmp://192.168.1.126/live
 // LiveRTMP.exe -src rtsp://192.168.1.134:8554/webcam.h264 -output rtmp://192.168.1.126/live
 
+IXVideoCapture* pVidRec = NULL;
+IXAudioRecord* pAudRec = NULL;
+IXMediaEncode* pXMedia = NULL;
+IXRtmp* pRtmp = NULL;
+char* pszOut = NULL;
+
+int StopLive()
+{
+	if( pVidRec )
+		pVidRec->StopRecord();
+
+	if( pAudRec )
+		pAudRec->StopRecord();
+
+	if( pXMedia )
+		pXMedia->Close();
+
+	if( pRtmp )
+		pRtmp->Close();
+
+	if( pszOut )
+		delete pszOut;
+
+	getchar();
+
+	return -1;
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -21,15 +49,14 @@ int main(int argc, char *argv[])
     int iSampleSize = 2;    // 2 Bytes
 	//const char* pszIn = "rtsp://192.168.1.134:8554/webcam.h264";	// Run simple rtsp server, and use ffmpeg to push camera video as rtsp stream
     //const char* pszOut = "rtmp://192.168.1.126/live";
-	char* pszOut = NULL;
 
     // Encoder and "Pixel format converter"/"ReSampler"
-	IXMediaEncode* pXMedia = IXMediaEncode::Get( 0 );
+	pXMedia = IXMediaEncode::Get( 0 );
 	if( !pXMedia )
 		return -1;
 
     /// 1. Open Camera
-    IXVideoCapture* pVidRec = IXVideoCapture::Get( 0 );
+    pVidRec = IXVideoCapture::Get( 0 );
 
 	string strCmdline( "" );
 
@@ -87,13 +114,13 @@ int main(int argc, char *argv[])
 						if( pszOut )
 							::strcpy( pszOut, argv[ i ] );
 						else
-							return -1;
+							return StopLive();
 
 						break;
 					}
 					else
 					{
-						return -1;
+						return StopLive();
 					}
 				}
 			}
@@ -106,56 +133,49 @@ int main(int argc, char *argv[])
 	if( !pXMedia->InitScale( pVidRec->m_iSrcWidth, pVidRec->m_iSrcHeight, 3, 1280, 960 ) )
 	{
 		cout << "InitScale failed!" << endl;
-		getchar();
-		return -1;
+		return StopLive();
 	}
 
 	// 4.1 Initial encode video context
     if( !pXMedia->InitVideoCodec( 512 * 1024 * 8, pVidRec->m_iFPS ) )
     {
         cout << "InitVideoCodec failed!" << endl;
-		getchar();
-		return -1;
+		return StopLive();
 	}
 
     /// 1. QT音頻開始錄製
-    IXAudioRecord* pAudRec = IXAudioRecord::Get();
+    pAudRec = IXAudioRecord::Get();
     if( !pAudRec->StartRecord( IXAudioRecord::XSAMPLE_FORMAT_INT16, iNBSamples, iSampleRate, iChannels ) )
 	{
         cout << "IXAudioRecord StartRecord failed!" << endl;
-		getchar();
-		return -1;
+		return StopLive();
 	}
 
     /// 3.1 音頻重採樣
     if( !pXMedia->InitResample( iNBSamples, iSampleRate, iChannels, iSampleSize, IXMediaEncode::X_SAMPLE_FMT_S16, IXMediaEncode::X_SAMPLE_FMT_FLTP ) )
     {
-		getchar();
-		return -1;
+		return StopLive();
     }
 
     /// 4.1 Initialize Audio Encoder
     if( !pXMedia->InitAudioCodec( 40000 ) )
     {
-		getchar();
-		return -1;
+		return StopLive();
     }
 
     const AVCodecContext* pAudCodecCtx = pXMedia->GetAudioCodecContext();
 
 	/// 5. 配置Container和Audio Stream
 	// Create output stream container context
-	IXRtmp* pRtmp = IXRtmp::Get( 0 );
+	pRtmp = IXRtmp::Get( 0 );
 	if( !pRtmp )
 	{
-		getchar();
-		return -1;
+		return StopLive();
 	}
 
 	if( !pRtmp->Init( pszOut ) )
 	{
-		getchar();
-		return -1;
+		return StopLive();
 	}
 
 	// Initial output video/audio stream
@@ -163,23 +183,20 @@ int main(int argc, char *argv[])
 	if( iVideoStreamIdx < 0 )
 	{
 		cout << "Add video stream failed!" << endl;
-		getchar();
-		return -1;
+		return StopLive();
 	}
 
 	int iAudioStreamIdx = pRtmp->AddStream( pXMedia->GetAudioCodecContext() );
     if( iAudioStreamIdx < 0 )
 	{
         cout << "Add Audio stream failed!" << endl;
-		getchar();
-		return -1;
+		return StopLive();
 	}
 
 	/// 6. Open RTMP network I/O
     if( !pRtmp->SendHead() )
 	{
-		getchar();
-		return -1;
+		return StopLive();
 	}
 
     //
@@ -246,19 +263,7 @@ int main(int argc, char *argv[])
 		}
     }
 
-    if( pAudRec )
-        pAudRec->StopRecord();
+	StopLive();
 
-	if( pXMedia )
-        pXMedia->Close();
-
-	if( pRtmp )
-		pRtmp->Close();
-
-	if( pszOut )
-		delete pszOut;
-
-    getchar();
-
-    return a.exec();
+	return a.exec();
 }

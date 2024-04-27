@@ -122,7 +122,7 @@ bool CXRtmp::SendHead()
 	{
 		char szBuf[ 1024 ] = { 0 };
 		av_strerror( iRet, szBuf, sizeof( szBuf ) - 1 );
-		cout << szBuf << endl;
+		cout << "avio_open: " << szBuf << endl;
 		return false;
 	}
 
@@ -132,7 +132,7 @@ bool CXRtmp::SendHead()
 	{
 		char szBuf[ 1024 ] = { 0 };
 		av_strerror( iRet, szBuf, sizeof( szBuf ) - 1 );
-		cout << szBuf << endl;
+		cout << "avformat_write_header: " << szBuf << endl;
 		return false;
 	}
 
