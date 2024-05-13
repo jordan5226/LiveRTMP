@@ -1,6 +1,7 @@
 # LiveRTMP
 A simple demo for pushing RTMP stream, using OpenCV + FFmpeg + Qt.  
 The video/audio source can be from a webcam or RTSP stream.  
+The RTMP stream destination can be nginx-rtmp, crtmpserver, etc.
   
 # Environment Configuration
 ***Visual Studio 2019***  
@@ -29,6 +30,8 @@ Use release build from here:
 `LiveRTMP.exe -camera -output rtmp://192.168.1.126/live`  
   
 2. Source from RTSP stream  
-`LiveRTMP.exe -src rtsp://192.168.1.134:8554/webcam.h264 -output rtmp://192.168.1.126/live`  
-I use nginx-rtmp as the rtmp server.  
+`LiveRTMP.exe -src rtsp://192.168.1.134:8554/webcam.h264 -output rtmp://192.168.1.126/live`
+
+The argument after `-output` points to the RTMP server url.  
+I use nginx-rtmp as the RTMP server.  
   
